@@ -31,21 +31,21 @@ const credentials = {
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 passport.use(new DiscordStrategy({
-	clientID: process.env.CLIENT_ID,
-	clientSecret: process.env.CLIENT_SECRET,
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
 	callbackURL: !isLocal ? "https://null.omg.lol/oauthcallback" : "http://localhost/oauthcallback",
-	scope: ["identify"]
+    scope: ["identify"]
 },
-function(token, tokenSecret, profile, cb) {
-	db.findOrCreate(profile, function(res) {
+function(accessToken, refreshToken, profile, cb) {
+    db.findOrCreate(profile, function(res) {
 		if (res == 500) { // If something goes wrong in finding/creating the user, db.js will return 500
 			cb("Interal Server Error: Database failure", null)
 		} else {
 			cb(null, res)
 		}
 	})
-}
-));
+}));
+
 app.use(session({
 	secret: process.env.SESSION_SECRET,
 	resave: true,
@@ -68,9 +68,9 @@ app.get('/login', function(req, res) {
 	res.render(`${__dirname}/public/login.ejs`, {redirect: req.session.redirectTo != undefined && req.session.redirectTo.length > 1 ? true : false});
 });
 
-app.get('/oauth', passport.authenticate('google', {scope: ['identify']}), function(req, res) {});
+app.get('/oauth', passport.authenticate('discord', {scope: ['identify']}), function(req, res) {});
 
-app.get('/oauthcallback', passport.authenticate('google', { failureRedirect: '/500.html'}), function(req, res) { 
+app.get('/oauthcallback', passport.authenticate('discord', { failureRedirect: '/500.html'}), function(req, res) { 
 	if(req.session.redirectTo) {
 		let dest = req.session.redirectTo; 
 		req.session.redirectTo = "/"
