@@ -45,13 +45,13 @@ function(accessToken, refreshToken, profile, cb) {
 		}
 	})
 }));
-
-app.use(session({
+var thesession = session({
 	secret: process.env.SESSION_SECRET,
 	resave: true,
 	saveUninitialized: true,
 	store: store
-}));
+})
+app.use(thesession);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/resources", express.static('public/resources'))
