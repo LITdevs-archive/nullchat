@@ -20,6 +20,8 @@ var isLocal = false;
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
+var messageLog
+
 var key = !isLocal ? fs.readFileSync("./privkey1.pem") : "";
 var cert = !isLocal ? fs.readFileSync("./cert1.pem") : "";
 var ca = !isLocal ? fs.readFileSync("./chain1.pem") : "";
@@ -32,6 +34,10 @@ const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 const { Server } = require("socket.io");
 const io = new Server(httpServer);
+io.use(function(socket, next){
+	// Wrap the express middleware
+	sessionMiddleware(socket.request, {}, next);
+})
 passport.use(new DiscordStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
@@ -95,11 +101,27 @@ function checkAuth(req, res, next) {
 //app.get('*', function(req, res){
 //	res.status(404).render(`${__dirname}/public/404.ejs`);
 //});
-
+var onlineUsers = [];
 io.on("connection", (socket) => {
-	socket.on('chat message', (msg) => {
-		io.emit('chat message', msg);
+	if(socket.request.session.passport) onlineUsers.push({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id});
+	socket.on("disconnect", (reason) => {
+		if(socket.request.session.passport) onlineUsers.splice(onlineUsers.indexOf({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id}), 1)
 	  });
+	socket.on('chat message', (msg) => {
+		if(!msg.startsWith("/")) {
+			if(msg.trim().length > 0) {
+				io.emit('chat message', {message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id});
+			}
+		} else {
+			switch(msg.substr(1)) {
+				case "list":
+					socket.emit("system response", {type: "list", data: onlineUsers})
+					break;
+				default:
+					socket.emit("system response", {type: "message", data: "invalid command"})
+			}
+		}
+	});
 });
 httpServer.listen(80, () => {
 	console.log('http running\n');

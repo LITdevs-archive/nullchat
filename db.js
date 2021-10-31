@@ -7,6 +7,7 @@ var User
 db.once('open', function() {
 	const userSchema = new mongoose.Schema({
 		id: String,
+		username: String,
 		saveData: Object
 	});
 	User = mongoose.model('User', userSchema);
@@ -26,6 +27,7 @@ function findOrCreate(profile, callback) {
 		} else {
 			let user = new User({
 				id: profile.id,
+				username: profile.username,
 				saveData: {
 					asdf: "asdf"
 				}
