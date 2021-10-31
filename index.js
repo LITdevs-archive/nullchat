@@ -97,11 +97,9 @@ function checkAuth(req, res, next) {
 //});
 
 io.on("connection", (socket) => {
-	console.log("death")
-	socket.on("pissjar", (data) => {
-		console.log(data)
-		socket.broadcast.emit("pissjar", data);
-	});
+	socket.on('chat message', (msg) => {
+		io.emit('chat message', msg);
+	  });
 });
 httpServer.listen(80, () => {
 	console.log('http running\n');
