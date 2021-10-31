@@ -17,6 +17,7 @@
     "mongoose": "^6.0.12",
     "passport": "^0.5.0",
     "passport-discord": "^0.1.4",
-    "postcss": "^8.3.11"
+    "postcss": "^8.3.11",
+    "socket.io": "^4.3.1"
   }
 }

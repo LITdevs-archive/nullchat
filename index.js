@@ -30,6 +30,8 @@ const credentials = {
 };
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
+const { Server } = require("socket.io");
+const io = new Server(httpServer);
 passport.use(new DiscordStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
@@ -45,22 +47,21 @@ function(accessToken, refreshToken, profile, cb) {
 		}
 	})
 }));
-var thesession = session({
+var sessionMiddleware = session({
 	secret: process.env.SESSION_SECRET,
 	resave: true,
 	saveUninitialized: true,
 	store: store
 })
-app.use(thesession);
+app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/resources", express.static('public/resources'))
 app.use(express.urlencoded({extended:true}));
 
-app.get("/", (req, res) => {
-	
-	res.render(`${__dirname}/public/index.ejs`);
 
+app.get("/", (req, res) => {	
+	res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
 });
 
 app.get('/login', function(req, res) {
@@ -91,11 +92,17 @@ function checkAuth(req, res, next) {
 	res.redirect(`/login`)
 }
 
+//app.get('*', function(req, res){
+//	res.status(404).render(`${__dirname}/public/404.ejs`);
+//});
 
-app.get('*', function(req, res){
-	res.status(404).render(`${__dirname}/public/404.ejs`);
+io.on("connection", (socket) => {
+	console.log("death")
+	socket.on("pissjar", (data) => {
+		console.log(data)
+		socket.broadcast.emit("pissjar", data);
+	});
 });
-
 httpServer.listen(80, () => {
 	console.log('http running\n');
 });
