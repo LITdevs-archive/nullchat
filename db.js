@@ -8,6 +8,7 @@ db.once('open', function() {
 	const userSchema = new mongoose.Schema({
 		id: String,
 		username: String,
+		flags: Array,
 		saveData: Object
 	});
 	User = mongoose.model('User', userSchema);
@@ -28,6 +29,7 @@ function findOrCreate(profile, callback) {
 			let user = new User({
 				id: profile.id,
 				username: profile.username,
+				flags: [null],
 				saveData: {
 					asdf: "asdf"
 				}
@@ -53,7 +55,21 @@ function deleteUser(profile, callback) {
 	})
 }
 
+function userFlag(user, flag, bool, callback) {
+	User.findOne({id:user}, (err, res) => {
+		if(err) return callback(err);
+		if(bool == "true") {
+			res.flags.push(flag)
+		} else {
+			res.flags.splice(res.flags.indexOf(flag), 1)
+		}
+		res.save()
+		callback(null)
+	})
+}
+
 module.exports = {
 	findOrCreate: findOrCreate,
-	deleteUser: deleteUser
+	deleteUser: deleteUser,
+	userFlag: userFlag
 }

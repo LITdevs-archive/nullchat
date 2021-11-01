@@ -6,6 +6,7 @@
 	<script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
 	<title>null</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="shortcut icon" href="resources/favicon.ico"/>
 	<style> 
 		body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   
@@ -17,12 +18,15 @@
 		#messages { list-style-type: none; margin: 0; padding: 0; }
 		#messages > li { padding: 0.5rem 1rem; }
 		#messages > li:nth-child(odd) { background: #efefef; }
+		.offline {background: rgb(0,0,0) !important; color: white}
+		.highlight {background: rgb(252, 230, 194) !important; color: black}
 	  </style>
 </head>
 <body>
-	<ul id="messages"></ul>
+	<audio autoplay><source src="/resources/broadcast.wav"></audio>
+	<ul id="messages"><li>Connecting to server...</li></ul> <!-- who would block something like this??? -->
 	<form id="form" action="">
-	  <input id="input" autocomplete="off" /><button>Send</button>
+	  <input id="input" maxlength="1024" autocomplete="off" /><button>Send</button>
 	</form>
   </body>
 <% if(user) { %>
@@ -40,8 +44,14 @@ form.addEventListener('submit', function(e) {
   }
 });
 	socket.on('chat message', function(msg) {
+		input.disabled = false;
 		var item = document.createElement('li');
-		item.innerHTML = `<a href="/profile/${msg.userId}"><p class='user'>${msg.user}<p class="text-xs">${msg.userId}</p></p></a><p id="message-content"></p>`;
+		let isMention = false;
+		if(msg.message.toLowerCase().includes('@<%= user.username.toLowerCase() %>') || msg.message.includes('@<%= user.id %>')) {
+			isMention = true;
+			item.classList.add("highlight");
+		}
+		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
@@ -54,10 +64,12 @@ form.addEventListener('submit', function(e) {
 				item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>${data.data}`;
 				break;
 			case "list":
-				console.log(data)
 				let finalMessage = `Online users: `
-				for(let i = 0; i < data.data.length; i++) {
-					finalMessage += `<a href="/profile/${data.data[i].id}" class="inline-block"><p class='user'>${data.data[i].name}</p></a>${i == data.data.length - 1 ? "." : ", "}`
+				let addedUsers = []
+				for(let i = 0; i < data.data.users.length; i++) {
+					if(addedUsers.includes(data.data.users[i].id)) continue;
+					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}</p></a>${i == data.data.users.length - 1 ? data.data.guests != "0" ? `, and ${data.data.guests} guest user${data.data.guests != "1" ? "s" : ""}` : "" : ", "}` // what the dog doin
+					addedUsers.push(data.data.users[i].id)
 				}
 				item.innerHTML = finalMessage
 				break;
@@ -66,6 +78,9 @@ form.addEventListener('submit', function(e) {
 				break;
 			case "rickroll":
 				window.location = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+				break;
+			case "logout":
+				window.location = "https://null.omg.lol/logout";
 				break;
 			case "adminmessage":
 				item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>Announcement!</p></a>${data.data}`;
@@ -76,9 +91,15 @@ form.addEventListener('submit', function(e) {
 	});
 	socket.on("disconnect", () => {
 		var item = document.createElement('li');
-		item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>The server has disconnected.`;
+		item.classList.add("offline");
+		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>Connection lost. Attempting to reconnect...`;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
+		var input = document.querySelector('input');
+		input.disabled = true;
+	});
+	socket.on("connect", () => {
+		messages.innerHTML = "";
 	});
 </script>
 <% } else {%>
@@ -100,9 +121,22 @@ form.addEventListener('submit', function(e) {
 	
 	socket.on('chat message', function(msg) {
 		var item = document.createElement('li');
-		item.innerHTML = `<a href="/profile/${msg.userId}"><p class='user'>${msg.user}<p class="text-xs">${msg.userId}</p></p></a>${msg.message}`;
+		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
+		item.querySelector("#message-content").textContent = msg.message;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
+	});
+
+	socket.on("disconnect", () => {
+		var item = document.createElement('li');
+		item.classList.add("offline");
+		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>Connection lost. Attempting to reconnect...`;
+		messages.appendChild(item);
+		window.scrollTo(0, document.body.scrollHeight);
+	});
+
+	socket.on("connect", () => {
+		messages.innerHTML = "";
 	});
 	</script>
 <% } %>
