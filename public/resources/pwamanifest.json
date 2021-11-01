@@ -1,0 +1,12 @@
+{
+    "short_name": "null",
+    "name": "null - the chat app",
+    "description": "null is an experimental chat app from LIT Devs.",
+    "start_url": "/",
+    "icons": [{
+        "src": "icon.png",
+        "sizes": "144x144",
+        "type": "image/png"
+      }],
+    "display": "standalone"
+}

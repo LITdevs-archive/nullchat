@@ -141,8 +141,14 @@ app.get("/profile/:pee", function(req, res) {
 		case "708333380525228082":
 			res.redirect("https://sus.omg.lol/")
 			break;
+		case "357156679684718592":
+			res.redirect("https://niek.omg.lol/")
+			break;
+		case "256156118164832257":
+			res.redirect("https://stan.omg.lol/")
+			break;
 		default:
-			res.send("profiles are not currently implemented.<br>thank you for using null.");
+			res.send("This user does not currently have a profile.<br><br><strong>Hello there! Are you a <a href='https://omg.lol'>OMG.LOL</a> customer and want your profile page to go to your OMG.LOL profile?<br>Contact us and we will link up your profile page here.");
 			break;
 	}
 });
@@ -187,7 +193,7 @@ io.on("connection", (socket) => {
 	socket.on('chat message', (msg) => {
 		try {
 		if(!msg.startsWith("/")) {
-			if(msg.trim().length > 0) {
+			if(msg.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().length > 0) {
 				let data
 				if(msg.length <= 1024) {
 					data = {message: msg, user: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, userId: socket.request.session.passport.user.id, time: Date.now()}
@@ -199,7 +205,6 @@ io.on("connection", (socket) => {
 				messageLog.push(data);
 				logStream.write(JSON.stringify(data) + "\n");
 				if (messageLog.length > 11) messageLog.shift();
-				
 			} else {
 				socket.emit("system response", {type: "message", data: "Message invalid. Please do not abuse null."});
 			}
