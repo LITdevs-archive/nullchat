@@ -48,6 +48,7 @@ const credentials = {
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 const { Server } = require("socket.io");
+const { allowedNodeEnvironmentFlags } = require("process");
 const io = new Server(httpServer);
 io.use(function(socket, next){
 	// Wrap the express middleware
@@ -107,6 +108,18 @@ app.get('/logout', function(req, res){
 	res.redirect('/');
 });
 
+app.get("/profile/:pee", function(req, res) {
+	switch (req.params.pee) {
+		case "rickroll":
+			res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+			break;
+		default:
+			res.render(`${__dirname}/public/404.ejs`);
+			break;
+	}
+});
+
+
 function checkAuth(req, res, next) {
 	if (req.isAuthenticated()) return next();
 	req.session.redirectTo = req.path;
@@ -118,6 +131,11 @@ function checkAuth(req, res, next) {
 //});
 function isAuth(socket) {
 	return socket.request.session.passport && socket.request.session.passport.user;
+}
+
+var admins = ["125644326037487616", "708333380525228082"]
+function isAdmin(socket) {
+	return admins.includes(socket.request.session.passport.user.id);
 }
 
 var onlineUsers = [];
@@ -133,9 +151,10 @@ io.on("connection", (socket) => {
 		try {
 		if(!msg.startsWith("/")) {
 			if(msg.trim().length > 0) {
-				io.emit('chat message', {message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id});
-				messageLog.push({message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id});
-				logStream.write(JSON.stringify({message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id}) + "\n");
+				let data = {message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id}
+				io.emit('chat message', data);
+				messageLog.push(data);
+				logStream.write(JSON.stringify(data) + "\n");
 				if (messageLog.length > 11) messageLog.shift();
 			}
 		} else {
@@ -144,27 +163,35 @@ io.on("connection", (socket) => {
 					socket.emit("system response", {type: "list", data: onlineUsers})
 					break;
 				case "/adminrefresh":
-					if(socket.request.session.passport.user.id == "125644326037487616") {
+					if(isAdmin(socket)) {
 						io.emit("system response", {type: "refresh", data: null})
 					} else {
 						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
 					}
 					break;
 				case "/broadcast":
-					if(socket.request.session.passport.user.id == "125644326037487616") {
+					if(isAdmin(socket)) {
 						io.emit("system response", {type: "adminmessage", data: msg.split("broadcast ")[1]})
 					} else {
 						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
 					}
 					break;
 				case "/rickrollpeople":
-					if(socket.request.session.passport.user.id == "125644326037487616") {
+					if(isAdmin(socket)) {
 						io.emit("system response", {type: "rickroll", data: null})
 					} else {
 						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
 					}
+					break;
+				case "/help":
+					if(isAdmin(socket)) {
+						socket.emit("system response", {type: "message", data: "/list, /broadcast <message>, /rickrollpeople, /adminrefresh"})
+					} else {
+						socket.emit("system response", {type: "message", data: "/list"})
+					}
+					break;
 				default:
-					socket.emit("system response", {type: "message", data: "invalid command"})
+					socket.emit("system response", {type: "message", data: "That command does not exist."})
 			}
 		}
 		} catch(e) {
