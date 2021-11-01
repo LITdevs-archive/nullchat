@@ -38,6 +38,11 @@ var input = document.getElementById('input');
 
 form.addEventListener('submit', function(e) {
   e.preventDefault();
+  if (input.value == "/notifications") {
+	input.value = ''
+	Notification.requestPermission();
+	return;
+  }
   if (input.value) {
 	socket.emit('chat message', input.value);
 	input.value = '';
@@ -50,6 +55,7 @@ form.addEventListener('submit', function(e) {
 		if(msg.message.toLowerCase().includes('@<%= user.username.toLowerCase() %>') || msg.message.includes('@<%= user.id %>')) {
 			isMention = true;
 			item.classList.add("highlight");
+			new Notification(`${msg.user} pinged you`, {body: msg.message});
 		}
 		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
