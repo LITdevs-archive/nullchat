@@ -57,6 +57,7 @@ function deleteUser(profile, callback) {
 
 function userFlag(user, flag, bool, callback) {
 	User.findOne({id:user}, (err, res) => {
+		if(!res) return callback("no such user")
 		if(err) return callback(err);
 		if(bool == "true") {
 			res.flags.push(flag)

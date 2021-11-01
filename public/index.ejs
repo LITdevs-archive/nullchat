@@ -57,7 +57,7 @@ form.addEventListener('submit', function(e) {
 			item.classList.add("highlight");
 			new Notification(`${msg.user} pinged you`, {body: msg.message});
 		}
-		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
+		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
@@ -72,18 +72,16 @@ form.addEventListener('submit', function(e) {
 			case "list":
 				let finalMessage = `Online users: `
 				let addedUsers = []
+				data.data.users.sort((a, b) => a.name.localeCompare(b.name))
 				for(let i = 0; i < data.data.users.length; i++) {
 					if(addedUsers.includes(data.data.users[i].id)) continue;
-					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}</p></a>${i == data.data.users.length - 1 ? data.data.guests != "0" ? `, and ${data.data.guests} guest user${data.data.guests != "1" ? "s" : ""}` : "" : ", "}` // what the dog doin
+					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${data.data.users[i].userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}</p></a>${i == data.data.users.length - 1 ? data.data.guests != "0" ? `, and ${data.data.guests} guest user${data.data.guests != "1" ? "s" : ""}` : "" : ", "}` // what the dog doin
 					addedUsers.push(data.data.users[i].id)
 				}
 				item.innerHTML = finalMessage
 				break;
 			case "refresh":
 				window.location = window.location;
-				break;
-			case "rickroll":
-				window.location = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 				break;
 			case "logout":
 				window.location = "https://null.omg.lol/logout";
@@ -127,7 +125,7 @@ form.addEventListener('submit', function(e) {
 	
 	socket.on('chat message', function(msg) {
 		var item = document.createElement('li');
-		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
+		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);

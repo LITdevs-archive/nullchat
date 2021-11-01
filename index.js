@@ -32,6 +32,13 @@ if (fs.existsSync(`${__dirname}/message_log.txt`)) {
 		}
 	}
 	messageLog.reverse()
+	if(logfile.length > 0) {
+		let newLog = messageLog
+		fs.writeFileSync(`${__dirname}/message_log.txt`, "");
+		for(let i = 0; i < newLog.length; i++) {
+			fs.appendFileSync(`${__dirname}/message_log.txt`, JSON.stringify(newLog[i]) + "\n");
+		}
+	}
 } else {
 	fs.writeFileSync(`${__dirname}/message_log.txt`, "");
 }
@@ -91,6 +98,17 @@ app.get('/login', function(req, res) {
 	res.render(`${__dirname}/public/login.ejs`, {redirect: req.session.redirectTo != undefined && req.session.redirectTo.length > 1 ? true : false});
 });
 
+app.get('/delete', checkAuth, function(req,res) {
+	db.deleteUser(req.user, function(result) {
+		if(result == 500) {
+			res.redirect('/resources/500.html');
+		} else {
+			req.logout();
+			res.redirect('/resources/deleted.html');
+		}
+	});
+})
+
 app.get('/oauth', passport.authenticate('discord', {scope: ['identify']}), function(req, res) {});
 
 app.get('/oauthcallback', passport.authenticate('discord', { failureRedirect: '/500.html'}), function(req, res) { 
@@ -108,16 +126,20 @@ app.get('/logout', function(req, res){
 	res.redirect('/');
 });
 
+app.get('/privacy', function(req, res){
+	res.redirect('/resources/privacy.html');
+});
+
 app.get("/profile/:pee", function(req, res) {
 	switch (req.params.pee) {
 		case "rickroll":
-			res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+			res.redirect("https://adam.omg.lol/")
 			break;
 		case "125644326037487616":
-			res.send("a pretty bone-y guy.");
+			res.redirect("https://profile.omg.lol/null");
 			break;
 		case "708333380525228082":
-			res.send("a pretty susky vukky.");
+			res.redirect("https://sus.omg.lol/")
 			break;
 		default:
 			res.send("profiles are not currently implemented.<br>thank you for using null.");
@@ -139,7 +161,7 @@ function isAuth(socket) {
 	return socket.request.session.passport && socket.request.session.passport.user;
 }
 
-var admins = ["708333380525228082"]
+var admins = ["708333380525228082", "125644326037487616"]
 function isAdmin(socket) {
 	return socket.request.session.passport.user.flags.includes("admin")|| admins.includes(socket.request.session.passport.user.id);
 }
@@ -200,22 +222,18 @@ io.on("connection", (socket) => {
 						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
 					}
 					break;
-				case "/rickrollpeople":
-					if(isAdmin(socket)) {
-						io.emit("system response", {type: "rickroll", data: null})
-					} else {
-						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
-					}
-					break;
 				case "/help":
 					if(isAdmin(socket)) {
-						socket.emit("system response", {type: "message", data: "Normal commands: /logout, /list, /help, /notifications<br>Admin commands: /broadcast &lt;message&gt;, /rickrollpeople, /adminrefresh, /flag &lt;user id&gt; &lt;flag&gt; &lt;true/false&gt;"})
+						socket.emit("system response", {type: "message", data: "Normal commands: /logout, /list, /help, /notifications, /delete-account<br>Admin commands: /broadcast &lt;message&gt;, /adminrefresh, /flag &lt;user id&gt; &lt;flag&gt; &lt;true/false&gt;"})
 					} else {
-						socket.emit("system response", {type: "message", data: "/list, /logout, /help, /notifications"})
+						socket.emit("system response", {type: "message", data: "/list, /logout, /help, /notifications, /delete-account"})
 					}
 					break;
 				case "/logout":
 					socket.emit("system response", {type: "logout", data: null}) // oh my god... well the types are just an arbitrary string so go ahead and add it
+					break;
+				case "/delete-account":
+					socket.emit("system response", {type: "message", data: "<p class='text-red'>If you are absolutely sure you wish to delete your account, click <a href='/delete'>here</a>. There is absolutely nothing we can do to reverse this!</p>"})
 					break;
 				case "/flag":
 					try {
