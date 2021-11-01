@@ -209,7 +209,7 @@ io.on("connection", (socket) => {
 					break;
 				case "/help":
 					if(isAdmin(socket)) {
-						socket.emit("system response", {type: "message", data: "Normal commands: /logout, /list, /help<br>Admin commands: /broadcast &lt;message&gt;, /rickrollpeople, /adminrefresh"})
+						socket.emit("system response", {type: "message", data: "Normal commands: /logout, /list, /help<br>Admin commands: /broadcast &lt;message&gt;, /rickrollpeople, /adminrefresh, /flag &lt;user id&gt; &lt;flag&gt; &lt;true/false&gt;"})
 					} else {
 						socket.emit("system response", {type: "message", data: "/list, /logout, /help"})
 					}
