@@ -75,3 +75,4 @@ typings/
 # FuseBox cache
 .fusebox/
 *.pem
+message_log.txt

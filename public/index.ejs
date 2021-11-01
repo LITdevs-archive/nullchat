@@ -60,7 +60,22 @@ form.addEventListener('submit', function(e) {
 				}
 				item.innerHTML = finalMessage
 				break;
+			case "refresh":
+				window.location = window.location;
+				break;
+			case "rickroll":
+				window.location = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+				break;
+			case "adminmessage":
+				item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-900 text-bold'>admin message</p></a>${data.data}`;
+				break;
 		}
+		messages.appendChild(item);
+		window.scrollTo(0, document.body.scrollHeight);
+	});
+	socket.on("disconnect", () => {
+		var item = document.createElement('li');
+		item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-900 text-bold'>system message</p></a>The server has disconnected.`;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});

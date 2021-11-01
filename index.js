@@ -20,7 +20,22 @@ var isLocal = false;
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
-var messageLog
+var messageLog = []
+if (fs.existsSync(`${__dirname}/message_log.txt`)) {
+	let logfile = fs.readFileSync(`${__dirname}/message_log.txt`).toString().split("\n");
+	for (let i = 0; i < 11; i++) {
+		if(!logfile[logfile.length -2]) { 
+			i = 11
+		} else {
+			messageLog.push(JSON.parse(logfile[logfile.length - 2]));
+			logfile.pop()
+		}
+	}
+	messageLog.reverse()
+} else {
+	fs.writeFileSync(`${__dirname}/message_log.txt`, "");
+}
+var logStream = fs.createWriteStream("message_log.txt", {flags:'a'});
 
 var key = !isLocal ? fs.readFileSync("./privkey1.pem") : "";
 var cert = !isLocal ? fs.readFileSync("./cert1.pem") : "";
@@ -101,25 +116,60 @@ function checkAuth(req, res, next) {
 //app.get('*', function(req, res){
 //	res.status(404).render(`${__dirname}/public/404.ejs`);
 //});
+function isAuth(socket) {
+	return socket.request.session.passport && socket.request.session.passport.user;
+}
+
 var onlineUsers = [];
 io.on("connection", (socket) => {
-	if(socket.request.session.passport) onlineUsers.push({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id});
+	for(let i = 0; i < messageLog.length; i++) {
+		socket.emit("chat message", messageLog[i]);
+	}
+	if(isAuth(socket)) onlineUsers.push({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id});
 	socket.on("disconnect", (reason) => {
-		if(socket.request.session.passport) onlineUsers.splice(onlineUsers.indexOf({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id}), 1)
+		if(isAuth(socket)) onlineUsers.splice(onlineUsers.indexOf({name: socket.request.session.passport.user.username, id: socket.request.session.passport.user.id}), 1)
 	  });
 	socket.on('chat message', (msg) => {
+		try {
 		if(!msg.startsWith("/")) {
 			if(msg.trim().length > 0) {
 				io.emit('chat message', {message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id});
+				messageLog.push({message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id});
+				logStream.write(JSON.stringify({message: msg, user: socket.request.session.passport.user.username, userId: socket.request.session.passport.user.id}) + "\n");
+				if (messageLog.length > 11) messageLog.shift();
 			}
 		} else {
-			switch(msg.substr(1)) {
-				case "list":
+			switch(msg.split(" ")[0]) {
+				case "/list":
 					socket.emit("system response", {type: "list", data: onlineUsers})
 					break;
+				case "/adminrefresh":
+					if(socket.request.session.passport.user.id == "125644326037487616") {
+						io.emit("system response", {type: "refresh", data: null})
+					} else {
+						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+					}
+					break;
+				case "/broadcast":
+					if(socket.request.session.passport.user.id == "125644326037487616") {
+						io.emit("system response", {type: "adminmessage", data: msg.split("broadcast ")[1]})
+					} else {
+						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+					}
+					break;
+				case "/rickrollpeople":
+					if(socket.request.session.passport.user.id == "125644326037487616") {
+						io.emit("system response", {type: "rickroll", data: null})
+					} else {
+						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+					}
 				default:
 					socket.emit("system response", {type: "message", data: "invalid command"})
 			}
+		}
+		} catch(e) {
+			console.log(e)
+			socket.emit("system response", {type: "message", data: e})
 		}
 	});
 });
