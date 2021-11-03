@@ -45,9 +45,9 @@ if (fs.existsSync(`${__dirname}/message_log.txt`)) {
 }
 var logStream = fs.createWriteStream("message_log.txt", {flags:'a'});
 
-var key = !isLocal ? fs.readFileSync("./privkey1.pem") : "";
-var cert = !isLocal ? fs.readFileSync("./cert1.pem") : "";
-var ca = !isLocal ? fs.readFileSync("./chain1.pem") : "";
+var key = process.env.privkey1 ? fs.readFileSync("./privkey1.pem") : "";
+var cert = process.env.cert1 ? fs.readFileSync("./cert1.pem") : "";
+var ca = process.env.chain1 ? fs.readFileSync("./chain1.pem") : "";
 const credentials = {
 	key: key,
 	cert: cert,
