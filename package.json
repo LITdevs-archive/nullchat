@@ -1,6 +1,6 @@
 {
   "name": "nullchat",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "me when the null is chat",
   "main": "index.js",
   "scripts": {

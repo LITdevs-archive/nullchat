@@ -8,6 +8,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="shortcut icon" href="resources/favicon.ico"/>
 	<link rel="manifest" href="resources/pwamanifest.json">
+	<meta property="og:title" content="null" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://null.omg.lol" />
+	<meta property="og:image" content="https://null.omg.lol/resources/icon.png" />
+	<meta property="og:description" content="null is an experimental chat application from LIT Devs." />
+	<meta name="theme-color" content="#000000">
 	<style> 
 		body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #333333	; }
   
@@ -21,16 +27,32 @@
 		.offline {background: rgb(0,0,0) !important; color: white}
 		.highlight {background: #49443C !important; color: white}
 	  </style>
+
+	<script> 
+		// catch outdated browsers
+		var $buoop = {required:{e:-4,f:-3,o:-3,s:-1,c:-3},insecure:true,unsupported:true,api:2021.11,text_for_i: {
+			'msg':'Your browser ({brow_name}) is so damn old! Internet Explorer is not supported anymore.',
+			'msgmore': 'Update your browser as soon as possible to use this site.'
+    	}}; 
+		function $buo_f(){ 
+		var e = document.createElement("script"); 
+		e.src = "//browser-update.org/update.min.js"; 
+		document.body.appendChild(e);
+		};
+		try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
+		catch(e){window.attachEvent("onload", $buo_f)}
+	</script>
 </head>
 <body>
 	<audio autoplay><source src="/resources/broadcast.wav"></audio>
-	<ul id="messages"><li>Connecting to server...</li></ul> <!-- who would block something like this??? -->
+	<ul id="messages"><li><a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Connection Manager</p></a>Connecting to null...</li></ul> <!-- who would block something like this??? -->
 	<form id="form" action="">
-	  <input id="input" maxlength="1024" autocomplete="off" /><button>Send</button>
+	  <input id="input" maxlength="1024" autocomplete="off" placeholder="Type your message..." /><button>Send</button>
 	</form>
   </body>
 <% if(user) { %>
 <script>
+window.deleteAccountConfirmed = false;
 var socket = io();
 
 var form = document.getElementById('form');
@@ -41,6 +63,15 @@ form.addEventListener('submit', function(e) {
   if (input.value == "/notifications") {
 	input.value = ''
 	Notification.requestPermission();
+	return;
+  }
+  if (input.value == "/delete-account" && window.deleteAccountConfirmed == false) {
+	input.value = ''
+	window.deleteAccountConfirmed = true;
+	var item = document.createElement('li');
+	item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-600 font-bold'>System</p></a>Are you sure? This will nuke your account from our servers, and you will be unable to recover it.<br>To confirm this action, run <code>/delete-account</code> again.`;
+	messages.appendChild(item);
+	window.scrollTo(0, document.body.scrollHeight);
 	return;
   }
   if (input.value) {
@@ -55,10 +86,17 @@ form.addEventListener('submit', function(e) {
 		if(msg.message.toLowerCase().includes('@<%= user.username.toLowerCase() %>') || msg.message.includes('@<%= user.id %>')) {
 			isMention = true;
 			item.classList.add("highlight");
+			window.unreadMessages = "!";
 			new Notification(`${msg.user} pinged you`, {body: msg.message});
 		}
-		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
+		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><p class='user inline'><a href="/profile/${msg.userId}">${msg.user}</a> <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs text-gray-400">${msg.userId}</p></p><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":D", '<img src="/resources/emoji/excited.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":)", '<img src="/resources/emoji/happy.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":(", '<img src="/resources/emoji/sad.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(";)", '<img src="/resources/emoji/surprised.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":P", '<img src="/resources/emoji/tongue.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":O", '<img src="/resources/emoji/surprised.png" class="inline">');
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});
@@ -67,17 +105,22 @@ form.addEventListener('submit', function(e) {
 		var item = document.createElement('li');
 		switch(data.type) {
 			case "message":
-				item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>${data.data}`;
+				item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-600 font-bold'>System</p></a>${data.data}`;
 				break;
 			case "list":
-				let finalMessage = `Online users: `
-				let addedUsers = []
+				let finalMessage = `${data.data.users.length} online users: `
+				let addedUsers = [];
 				data.data.users.sort((a, b) => a.name.localeCompare(b.name))
 				for(let i = 0; i < data.data.users.length; i++) {
-					if(addedUsers.includes(data.data.users[i].id)) continue;
-					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${data.data.users[i].userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}</p></a>${i == data.data.users.length - 1 ? data.data.guests != "0" ? `, and ${data.data.guests} guest user${data.data.guests != "1" ? "s" : ""}` : "" : ", "}` // what the dog doin
+					if(addedUsers.includes(data.data.users[i].id)) {
+						if(finalMessage.endsWith(" • ")) finalMessage = finalMessage.slice(0, -3);
+						continue;
+					};
+					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${data.data.users[i].userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}</p></a> • ` // what the dog doing here?
 					addedUsers.push(data.data.users[i].id)
 				}
+				if(finalMessage.endsWith(" • ")) finalMessage = finalMessage.slice(0, -3);
+				if(data.data.guests != 0) finalMessage += ` • and ${data.data.guests} guest user${data.data.guests != "1" ? "s" : ""}`
 				item.innerHTML = finalMessage
 				break;
 			case "refresh":
@@ -87,7 +130,7 @@ form.addEventListener('submit', function(e) {
 				window.location = "https://null.omg.lol/logout";
 				break;
 			case "adminmessage":
-				item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>Announcement!</p></a>${data.data}`;
+				item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Announcement!</p></a>${data.data}`;
 				break;
 		}
 		messages.appendChild(item);
@@ -96,7 +139,7 @@ form.addEventListener('submit', function(e) {
 	socket.on("disconnect", () => {
 		var item = document.createElement('li');
 		item.classList.add("offline");
-		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>Connection lost. Attempting to reconnect...`;
+		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Connection Manager</p></a>Your connection to null has been lost. Attempting to reconnect, please wait...`;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 		var input = document.querySelector('input');
@@ -125,8 +168,28 @@ form.addEventListener('submit', function(e) {
 	
 	socket.on('chat message', function(msg) {
 		var item = document.createElement('li');
-		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><a href="/profile/${msg.userId}"><p class='user inline'>${msg.user} ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs">${msg.userId}</p></p></a><p id="message-content" class="break-words"></p>`;
+		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><p class='user inline'><a href="/profile/${msg.userId}">${msg.user}</a> ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs text-gray-400">${msg.userId}</p></p><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":D", '<img src="/resources/emoji/excited.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":)", '<img src="/resources/emoji/happy.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":(", '<img src="/resources/emoji/sad.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(";)", '<img src="/resources/emoji/surprised.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":P", '<img src="/resources/emoji/tongue.png" class="inline">');
+		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":O", '<img src="/resources/emoji/surprised.png" class="inline">');
+		messages.appendChild(item);
+		window.scrollTo(0, document.body.scrollHeight);
+	});
+
+	socket.on("system response", (data) => {
+		var item = document.createElement('li');
+		switch(data.type) {
+			case "message":
+				item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-600 font-bold'>System</p></a>${data.data}`;
+				break;
+			case "adminmessage":
+				item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Announcement!</p></a>${data.data}`;
+				break;
+		}
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});
@@ -134,7 +197,7 @@ form.addEventListener('submit', function(e) {
 	socket.on("disconnect", () => {
 		var item = document.createElement('li');
 		item.classList.add("offline");
-		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-900 font-bold'>System</p></a>Connection lost. Attempting to reconnect...`;
+		item.innerHTML = `<audio autoplay><source src="/resources/broadcast.wav"></audio><a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Connection Manager</p></a>Your connection to null has been lost. Attempting to reconnect, please wait...`;
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});
@@ -144,4 +207,19 @@ form.addEventListener('submit', function(e) {
 	});
 	</script>
 <% } %>
+
+<script>
+// GLOBAL
+window.unreadMessages = 0;
+socket.on('chat message', function(msg) {
+	if(!document.hasFocus()) {
+		if(unreadMessages != "!") unreadMessages += 1;
+		document.title = `(${unreadMessages}) null`;
+	}
+});
+window.onfocus = function() {
+	unreadMessages = 0;
+	document.title = "null";
+}
+</script>
 </html>
