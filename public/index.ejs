@@ -110,7 +110,6 @@ form.addEventListener('submit', function(e) {
 			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(emojiItem[0], emojiItem[1])
 		}
 		messages.appendChild(item);
-		window.scrollTo(0, document.body.scrollHeight);
 	});
 
 	socket.on("system response", (data) => {
