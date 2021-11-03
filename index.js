@@ -56,7 +56,6 @@ const credentials = {
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 const { Server } = require("socket.io");
-const { allowedNodeEnvironmentFlags } = require("process");
 const io = new Server(httpServer);
 io.use(function(socket, next){
 	// Wrap the express middleware
@@ -194,8 +193,8 @@ io.on("connection", (socket) => {
 	} else {
 		guestUsers++
 	}
-	let protips = ["Use /notifications to get notifications when you're pinged!", "Check out /help, there might be interesting commands!", "If the tab is unfocused, the tab title shows how many unread messages you have!", "If the tab is unfocused, the tab title shows an exclamation mark when you've been mentioned!", "Use /list to see online users!", "Report bugs to get a bug badge!", "null supports emoticons like :D and :P in chat!"]
-	socket.emit("system response", {type: "message", data: `You have connected to null v${pjson.version}, an experimental chat service from LIT Devs! (<a href='terms'>Terms of Service</a> and <a href='privacy'>Privacy Policy</a>)<br>There are ${onlineUsers.length} online users, and ${guestUsers} guest users.<br><br><i>Pro tip: ${protips[Math.floor(Math.random() * protips.length)]}</i>`});
+	let protips = ["Use /notifications to get notifications when you're pinged!", "Check out /help, there might be interesting commands!", "If the tab is unfocused, the tab title shows how many unread messages you have!", "If the tab is unfocused, the tab title shows an exclamation mark when you've been mentioned!", "Use /list to see online users!", "Report bugs to get a bug badge!", "null supports emoticons like :D and :P in chat!", "Use /emojis to see available emojis!"]
+	socket.emit("system response", {type: "message", data: `You have connected to null, an experimental chat service from LIT Devs! (<a href='terms'>Terms of Service</a> and <a href='privacy'>Privacy Policy</a>)<br>There are ${onlineUsers.length} online users, and ${guestUsers} guest users. We're currently on ${pjson.friendlyVersion} (${pjson.version}) and more is coming soon!<br><br><i>Pro tip: ${protips[Math.floor(Math.random() * protips.length)]}</i>`});
 	socket.on("disconnect", (reason) => {
 		if(isAuth(socket)) {
 			 onlineUsers.splice(onlineUsers.indexOf({name: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, id: socket.request.session.passport.user.id}), 1)
@@ -204,160 +203,174 @@ io.on("connection", (socket) => {
 		}
 	});
 	socket.on('chat message', (msg) => {
-		if (socket.request.session.passport.user.flags.includes("muted")) return socket.emit("system response", {type: "message", data: "Message not sent: You are muted!"})
+		
+		//if (socket.request.session.passport.user.flags.includes("muted")) return socket.emit("system response", {type: "message", data: "Message not sent: You are muted!"})
 		try {
-		if(!msg.startsWith("/")) {
-			if(msg.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().length > 0) {
-				let data
-				if(msg.length <= 1024) {
-					data = {message: msg, user: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, userId: socket.request.session.passport.user.id, time: Date.now()}
-				} else {
-					socket.emit("system response", {type: "message", data: "Message too long or invalid. Please do not abuse null. Sending shortened version..."});
-					data = {message: msg.substr(0, 1024), user: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, userId: socket.request.session.passport.user.id, time: Date.now()}
+			store.get(socket.request.session.id, (err, res) => {
+				if (err) {
+					console.log(err);
+					return socket.emit("system response", {type: "message", data: "An error occurred - scream at us to check our logs for the reason. In the meantime, try relogging"});
 				}
-				io.emit('chat message', data);
-				messageLog.push(data);
-				logStream.write(JSON.stringify(data) + "\n");
-				if (messageLog.length > 11) messageLog.shift();
-			} else {
-				socket.emit("system response", {type: "message", data: "Message invalid. Please do not abuse null."});
-			}
-		} else {
-			switch(msg.split(" ")[0]) {
-				case "/list":
-					socket.emit("system response", {type: "list", data: {users: onlineUsers, guests: guestUsers}});
-					break;
-				case "/adminrefresh":
-					if(isAdmin(socket)) {
-						io.emit("system response", {type: "refresh", data: null})
-					} else {
-						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
-					}
-					break;
-				case "/broadcast":
-					if(isAdmin(socket)) {
-						io.emit("system response", {type: "adminmessage", data: msg.split("broadcast ")[1]})
-					} else {
-						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
-					}
-					break;
-				case "/help":
-					let normalCommands = "/list, /logout, /help, /notifications, /delete-account"
-					if(isAdmin(socket)) {
-						socket.emit("system response", {type: "message", data: `Normal commands: ${normalCommands}<br>Admin commands: /broadcast &lt;message&gt;, /adminrefresh, /flag &lt;user id&gt; &lt;flag&gt; &lt;true/false&gt;`})
-					} else {
-						socket.emit("system response", {type: "message", data: normalCommands})
-					}
-					break;
-				case "/logout":
-					socket.emit("system response", {type: "logout", data: null}) // oh my god... well the types are just an arbitrary string so go ahead and add it
-					break;
-				case "/delete-account":
-					socket.emit("system response", {type: "message", data: "<p class='text-red'>Alrighty. If you are <b>absolutely</b> sure you wish to delete your account, click <a href='/delete'>here</a>.<br>There is absolutely <b>NOTHING</b> we can do to reverse this, so do NOT contact us to get your account back!</p>"})
-					break;
-				case "/flag":
-					try {
-					if(isAdmin(socket)) {
-						
-						let args = msg.split(" ");
-						if (args.length != 4) {
-							socket.emit("system response", {type: "message", data: "Invalid arguments. Usage: /flag userid flag true/false"}); // copilot generated the usage, very nice!
-						} else {
-						db.userFlag(args[1], args[2], args[3], (err) => {
-							if(err) {
-								socket.emit("system response", {type: "message", data: "Error: " + err});
+					if(!msg.startsWith("/")) {
+						if(res.passport.user.flags.includes("muted")) return socket.emit("system response", {type: "message", data: "Message not sent: You are muted!"})
+						if(msg.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().length > 0) {
+							msg = msg.replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
+							let data
+							if(msg.length <= 1024) {
+								data = {message: msg, user: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, userId: socket.request.session.passport.user.id, time: Date.now()}
 							} else {
-								socket.emit("system response", {type: "message", data: "Successfully changed flag."});
-								store.all((error, sessions) => {
-									//looks for a session where session.passport.user.id == args[1]
-									for(let i = 0; i < sessions.length; i++) {
-										if(!sessions[i].session.passport) continue;
-										if(!sessions[i].session.passport.user) continue;
-										if(sessions[i].session.passport.user.id == args[1]) {
-											let session = sessions[i].session;
-											if(args[3] == "true") {
-												session.passport.user.flags.push(args[2])
-											} else {
-												session.passport.user.flags.splice(session.passport.user.flags.indexOf(args[2]), 1)
-											}
-											store.set(sessions[i]._id, session, function callback(err) {
-												if(err) {
-													console.log("error: " + err)
-													socket.emit("system response", {type: "message", data: "Error: " + err});
-												} else {
-													io.emit("system response", {type: "refresh", data:null})
+								socket.emit("system response", {type: "message", data: "Message too long or invalid. Please do not abuse null. Sending shortened version..."});
+								data = {message: msg.substr(0, 1024), user: socket.request.session.passport.user.username, userFlags: socket.request.session.passport.user.flags, userId: socket.request.session.passport.user.id, time: Date.now()}
+							}
+							io.emit('chat message', data);
+							messageLog.push(data);
+							logStream.write(JSON.stringify(data) + "\n");
+							if (messageLog.length > 11) messageLog.shift();
+						} else {
+							socket.emit("system response", {type: "message", data: "Message invalid. Please do not abuse null."});
+						}
+					} else {
+						switch(msg.split(" ")[0]) {
+							case "/list":
+								socket.emit("system response", {type: "list", data: {users: onlineUsers, guests: guestUsers}});
+								break;
+							case "/adminreload":
+							case "/adminrefresh":
+								if(isAdmin(socket)) {
+									io.emit("system response", {type: "refresh", data: null})
+								} else {
+									socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+								}
+								break;
+							case "/broadcast":
+								if(isAdmin(socket)) {
+									io.emit("system response", {type: "adminmessage", data: msg.split("broadcast ")[1]})
+								} else {
+									socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+								}
+								break;
+							case "/?":
+							case "/help":
+								let normalCommands = "/list, /help, /emojis, /logout, /notifications, /delete-account"
+								if(isAdmin(socket)) {
+									socket.emit("system response", {type: "message", data: `Normal commands: ${normalCommands}<br>Admin commands: /broadcast &lt;message&gt;, /adminrefresh, /flag &lt;user id&gt; &lt;flag&gt; &lt;true/false&gt;`})
+								} else {
+									socket.emit("system response", {type: "message", data: normalCommands})
+								}
+								break;
+							case "/logout":
+								socket.emit("system response", {type: "logout", data: null}) // oh my god... well the types are just an arbitrary string so go ahead and add it
+								break;
+							case "/delete-account":
+								socket.emit("system response", {type: "message", data: "<p class='text-red'>Alrighty. If you are <b>absolutely</b> sure you wish to delete your account, click <a href='/delete'>here</a>.<br>There is absolutely <b>NOTHING</b> we can do to reverse this, so do NOT contact us to get your account back!</p>"})
+								break;
+							case "/flag":
+								try {
+								if(isAdmin(socket)) {
+									
+									let args = msg.split(" ");
+									if (args.length != 4) {
+										socket.emit("system response", {type: "message", data: "Invalid arguments. Usage: /flag userid flag true/false"}); // copilot generated the usage, very nice!
+									} else {
+									db.userFlag(args[1], args[2], args[3], (err) => {
+										if(err) {
+											socket.emit("system response", {type: "message", data: "Error: " + err});
+										} else {
+											socket.emit("system response", {type: "message", data: "Successfully changed flag."});
+											store.all((error, sessions) => {
+												//looks for a session where session.passport.user.id == args[1]
+												for(let i = 0; i < sessions.length; i++) {
+													if(!sessions[i].session.passport) continue;
+													if(!sessions[i].session.passport.user) continue;
+													if(sessions[i].session.passport.user.id == args[1]) {
+														let session = sessions[i].session;
+														if(args[3] == "true") {
+															session.passport.user.flags.push(args[2])
+														} else {
+															session.passport.user.flags.splice(session.passport.user.flags.indexOf(args[2]), 1)
+														}
+														store.set(sessions[i]._id, session, function callback(err) {
+															if(err) {
+																console.log("error: " + err)
+																socket.emit("system response", {type: "message", data: "Error: " + err});
+															} else {
+																io.emit("system response", {type: "refresh", data:null})
+															}
+														})
+													}
 												}
 											})
 										}
-									}
-								})
-							}
-						});
-					}
-					} else {
-						socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
-					}
-					} catch(e) {
-						console.log(e);
-						socket.emit("system response", {type: "message", data: "Something went wrong here"});
-					}
-					break;
-				case "/mute":
-					try {
-						if(isAdmin(socket)) {
-							
-							let args = msg.split(" ");
-							if (args.length != 3) {
-								socket.emit("system response", {type: "message", data: "Invalid arguments. Usage: /mute userid true/false"}); // copilot generated the usage, very nice!
-							} else {
-							db.userFlag(args[1], "muted", args[2], (err) => {
-								if(err) {
-									socket.emit("system response", {type: "message", data: "Error: " + err});
+									});
+								}
 								} else {
-									socket.emit("system response", {type: "message", data: "Successfully muted."});
-									store.all((error, sessions) => {
-										//looks for a session where session.passport.user.id == args[1]
-										for(let i = 0; i < sessions.length; i++) {
-											if(!sessions[i].session.passport) continue;
-											if(!sessions[i].session.passport.user) continue;
-											if(sessions[i].session.passport.user.id == args[1]) {
-												let session = sessions[i].session;
-												if(args[2] == "true") {
-													session.passport.user.flags.push("muted")
-												} else {
-													session.passport.user.flags.splice(session.passport.user.flags.indexOf("muted"), 1)
-												}
-												store.set(sessions[i]._id, session, function callback(err) {
-													if(err) {
-														console.log("error: " + err)
-														socket.emit("system response", {type: "message", data: "Error: " + err});
-													} else {
-														if(args[2] == "true") {
-															io.emit("system response", {type: "message", data:`${session.passport.user.username} was muted!`})
+									socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+								}
+								} catch(e) {
+									console.log(e);
+									socket.emit("system response", {type: "message", data: "Something went wrong here"});
+								}
+								break;
+							case "/mute":
+								try {
+									if(isAdmin(socket)) {
+										
+										let args = msg.split(" ");
+										if (args.length != 3) {
+											socket.emit("system response", {type: "message", data: "Invalid arguments. Usage: /mute userid true/false"}); // copilot generated the usage, very nice!
+										} else {
+										db.userFlag(args[1], "muted", args[2], (err) => {
+											if(err) {
+												socket.emit("system response", {type: "message", data: "Error: " + err});
+											} else {
+												socket.emit("system response", {type: "message", data: "Successfully changed mute status."});
+												store.all((error, sessions) => {
+													//looks for a session where session.passport.user.id == args[1]
+													for(let i = 0; i < sessions.length; i++) {
+														if(!sessions[i].session.passport) continue;
+														if(!sessions[i].session.passport.user) continue;
+														if(sessions[i].session.passport.user.id == args[1]) {
+															let session = sessions[i].session;
+															if(args[2] == "true") {
+																session.passport.user.flags.push("muted")
+															} else {
+																session.passport.user.flags.splice(session.passport.user.flags.indexOf("muted"), 1)
+															}
+															store.set(sessions[i]._id, session, function callback(err) {
+																if(err) {
+																	console.log("error: " + err)
+																	socket.emit("system response", {type: "message", data: "Error: " + err});
+																} else {
+																	if(args[2] == "true") {
+																		io.emit("system response", {type: "message", data:`${session.passport.user.username} was muted!`})
+																	}
+																}
+															})
+															break;
 														}
 													}
 												})
 											}
-										}
-									})
-								}
-							});
+										});
+									}
+									} else {
+										socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
+									}
+									} catch(e) {
+										console.log(e);
+										socket.emit("system response", {type: "message", data: "Something went wrong here"});
+									}
+									break;	
+							default:
+								socket.emit("system response", {type: "message", data: "That command does not exist."})
 						}
-						} else {
-							socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
-						}
-						} catch(e) {
-							console.log(e);
-							socket.emit("system response", {type: "message", data: "Something went wrong here"});
-						}
-						break;	
-				default:
-					socket.emit("system response", {type: "message", data: "That command does not exist."})
-			}
-		}
+					}
+				
+			})
+		
 		} catch(e) {
 			console.log(e)
-			socket.emit("system response", {type: "message", data: `FUcK!!! ${e} SOmething went horribly wrong hyah!! Try relogging using /logout`}) //nobody should ever see this
+			socket.emit("system response", {type: "message", data: `Looks like youre not logged in, please login. If you are logged in, please relog using /logout ${e}`}) //nobody should ever see this
 		}
 	});
 });

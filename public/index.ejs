@@ -23,7 +23,8 @@
 		#form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
   
 		#messages { list-style-type: none; margin: 0; padding: 0; color: white }
-		#messages > li { padding: 0.5rem 1rem; }
+		#messages > li { padding: 0.5rem 1rem }
+		#messages > li > p, #messages { overflow: hidden }
 		.offline {background: rgb(0,0,0) !important; color: white}
 		.highlight {background: #49443C !important; color: white}
 	  </style>
@@ -74,6 +75,19 @@ form.addEventListener('submit', function(e) {
 	window.scrollTo(0, document.body.scrollHeight);
 	return;
   }
+  if (input.value == "/emojis") {
+	input.value = ''
+	var item = document.createElement('li');
+	var finalMessage = "";
+	for (let i = 0; i < Object.entries(emojiDB).length; i++) {
+		const emojiItem = Object.entries(emojiDB)[i];
+		finalMessage += `${emojiItem[0]} - ${emojiItem[1]}<br>`
+	}
+	item.innerHTML = `<a href="/profile/rickroll"><p class='user text-red-600 font-bold'>Emoji List</p></a>${finalMessage}`;
+	messages.appendChild(item);
+	window.scrollTo(0, document.body.scrollHeight);
+	return;
+  }
   if (input.value) {
 	socket.emit('chat message', input.value);
 	input.value = '';
@@ -91,12 +105,10 @@ form.addEventListener('submit', function(e) {
 		}
 		item.innerHTML = `<audio autoplay><source src="/resources/${isMention ? "mention" : "message"}.wav"></audio><p class='user inline'><a href="/profile/${msg.userId}">${msg.user}</a> <span class="text-xs text-gray-400">${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs text-gray-400">${msg.userId}</p></p><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":D", '<img src="/resources/emoji/excited.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":)", '<img src="/resources/emoji/happy.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":(", '<img src="/resources/emoji/sad.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(";)", '<img src="/resources/emoji/surprised.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":P", '<img src="/resources/emoji/tongue.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":O", '<img src="/resources/emoji/surprised.png" class="inline">');
+		for (let i = 0; i < Object.entries(emojiDB).length; i++) {
+			const emojiItem = Object.entries(emojiDB)[i];
+			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(emojiItem[0], emojiItem[1])
+		}
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});
@@ -116,6 +128,7 @@ form.addEventListener('submit', function(e) {
 						if(finalMessage.endsWith(" • ")) finalMessage = finalMessage.slice(0, -3);
 						continue;
 					};
+					if(!finalMessage.endsWith(" • ")) finalMessage += " • ";
 					finalMessage += `<a href="/profile/${data.data.users[i].id}" class="inline-block"><p class='user inline'>${data.data.users[i].name}${data.data.users[i].userFlags.includes("admin") ? ` <img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${data.data.users[i].userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}</p></a> • ` // what the dog doing here?
 					addedUsers.push(data.data.users[i].id)
 				}
@@ -170,12 +183,10 @@ form.addEventListener('submit', function(e) {
 		var item = document.createElement('li');
 		item.innerHTML = `<audio autoplay><source src="/resources/message.wav"></audio><p class='user inline'><a href="/profile/${msg.userId}">${msg.user}</a> ${msg.userFlags.includes("admin") ? `<img src="/resources/badges/admin.png" width="24px" class="inline" title="Administrator"/> ` : ""}${msg.userFlags.includes("bug") ? `<img src="/resources/badges/bug.png" width="24px" class="inline" title="Bug Reporter"/> ` : ""}<span class="text-xs text-gray-400">${msg.time ? new Date(msg.time).toLocaleString() : ""}</span></p><p class="text-xs text-gray-400">${msg.userId}</p></p><p id="message-content" class="break-words"></p>`;
 		item.querySelector("#message-content").textContent = msg.message;
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":D", '<img src="/resources/emoji/excited.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":)", '<img src="/resources/emoji/happy.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":(", '<img src="/resources/emoji/sad.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(";)", '<img src="/resources/emoji/surprised.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":P", '<img src="/resources/emoji/tongue.png" class="inline">');
-		item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(":O", '<img src="/resources/emoji/surprised.png" class="inline">');
+		for (let i = 0; i < Object.entries(emojiDB).length; i++) {
+			const emojiItem = Object.entries(emojiDB)[i];
+			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(emojiItem[0], emojiItem[1])
+		}
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
 	});
@@ -210,6 +221,23 @@ form.addEventListener('submit', function(e) {
 
 <script>
 // GLOBAL
+window.emojiDB = {
+    ":D": "<img src='/resources/emoji/excited.png' class='inline'>",
+    ":)": "<img src='/resources/emoji/happy.png' class='inline'>",
+    "&gt;:(": "<img src='/resources/emoji/angry.png' class='inline'>",
+    ":(": "<img src='/resources/emoji/sad.png' class='inline'>",
+    ";)": "<img src='/resources/emoji/wink.png' class='inline'>",
+    ":P": "<img src='/resources/emoji/tongue.png' class='inline'>",
+    ":O": "<img src='/resources/emoji/surprised.png' class='inline'>",
+    ":sus:": "ඞ",
+	":staff:": "<img width='20' src='/resources/badges/admin.png' class='inline'>",
+    ":s": "<img src='/resources/emoji/confused.png' class='inline'>",
+	":dgoosedefault:": "<img src='//cdn.discordapp.com/emojis/677329379378069541.gif?size=20' class='inline'>",
+	":hmmm:": "<img src='//cdn.discordapp.com/emojis/848524889266454528.png?size=20' class='inline'>",
+	":kekw:": "<img src='//cdn.discordapp.com/emojis/722193068333203478.png?size=20' class='inline'>",
+	":hype:": "<img src='//cdn.discordapp.com/emojis/869303657563316255.png?size=20' class='inline'>",
+	":bug:": "<img width='20' src='/resources/badges/bug.png' class='inline'>"
+}
 window.unreadMessages = 0;
 socket.on('chat message', function(msg) {
 	if(!document.hasFocus()) {
@@ -221,5 +249,6 @@ window.onfocus = function() {
 	unreadMessages = 0;
 	document.title = "null";
 }
+document.addEventListener("keypress", ()=>{input.focus()});
 </script>
 </html>
