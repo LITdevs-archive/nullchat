@@ -374,10 +374,10 @@ io.on("connection", (socket) => {
 		}
 	});
 });
-httpServer.listen(80, () => {
+httpServer.listen(process.env.PORT ? process.env.PORT : 80, () => {
 	console.log('http running\n');
 });
 
-httpsServer.listen(443, () => {
+httpsServer.listen(process.env.PORT ? process.env.PORT : 443, () => {
 	console.log('https running\n');
 });
