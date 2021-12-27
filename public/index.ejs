@@ -107,7 +107,7 @@ form.addEventListener('submit', function(e) {
 		item.querySelector("#message-content").textContent = msg.message;
 		for (let i = 0; i < Object.entries(emojiDB).length; i++) {
 			const emojiItem = Object.entries(emojiDB)[i];
-			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(emojiItem[0], emojiItem[1])
+			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replaceAll(emojiItem[0], emojiItem[1])
 		}
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
@@ -185,7 +185,7 @@ form.addEventListener('submit', function(e) {
 		item.querySelector("#message-content").textContent = msg.message;
 		for (let i = 0; i < Object.entries(emojiDB).length; i++) {
 			const emojiItem = Object.entries(emojiDB)[i];
-			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replace(emojiItem[0], emojiItem[1])
+			if(item.querySelector("#message-content").innerHTML.includes(emojiItem[0])) item.querySelector("#message-content").innerHTML = item.querySelector("#message-content").innerHTML.replaceAll(emojiItem[0], emojiItem[1])
 		}
 		messages.appendChild(item);
 		window.scrollTo(0, document.body.scrollHeight);
