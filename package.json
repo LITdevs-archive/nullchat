@@ -1,7 +1,7 @@
 {
   "name": "nullchat",
-  "version": "0.1.0",
-  "friendlyVersion": "The Emoji Update",
+  "version": "0.1.1",
+  "friendlyVersion": "The Patching Update",
   "description": "me when the null is chat",
   "main": "index.js",
   "scripts": {
