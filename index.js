@@ -157,6 +157,9 @@ app.get("/profile/:pee", function(req, res) {
 		case "490664749315653642":
 			res.redirect("https://ඞ.omg.lol")
 			break;
+		case "492647318474981377":
+			res.redirect("https://walkx.org")
+			break;
 		default:
 			res.send("This user does not currently have a profile.<br><br><strong>Hello there! Are you a <a href='https://omg.lol'>OMG.LOL</a> customer and want your profile page to go to your OMG.LOL profile?<br>Contact us and we will link up your profile page here.");
 			break;
