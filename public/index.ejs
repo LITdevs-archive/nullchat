@@ -223,23 +223,23 @@ form.addEventListener('submit', function(e) {
 <script>
 // GLOBAL
 window.emojiDB = {
-    ":D": "<img src='/resources/emoji/excited.png' class='inline'>",
-    ":)": "<img src='/resources/emoji/happy.png' class='inline'>",
-    "&gt;:(": "<img src='/resources/emoji/angry.png' class='inline'>",
-    ":(": "<img src='/resources/emoji/sad.png' class='inline'>",
-    ";)": "<img src='/resources/emoji/wink.png' class='inline'>",
-    ":P": "<img src='/resources/emoji/tongue.png' class='inline'>",
-    ":O": "<img src='/resources/emoji/surprised.png' class='inline'>",
-    ":sus:": "ඞ",
-	":staff:": "<img width='20' src='/resources/badges/admin.png' class='inline'>",
-    ":s": "<img src='/resources/emoji/confused.png' class='inline'>",
-	":dgoosedefault:": "<img src='//cdn.discordapp.com/emojis/677329379378069541.gif?size=20' class='inline'>",
-	":hmmm:": "<img src='//cdn.discordapp.com/emojis/848524889266454528.png?size=20' class='inline'>",
-	":kekw:": "<img src='//cdn.discordapp.com/emojis/722193068333203478.png?size=20' class='inline'>",
-	":hype:": "<img src='//cdn.discordapp.com/emojis/869303657563316255.png?size=20' class='inline'>",
-	":bug:": "<img width='20' src='/resources/badges/bug.png' class='inline'>",
-	":omg:": "<img src='https://cdn.discordapp.com/emojis/920790382105735279.gif' class='inline'>",
-	":wave:": "<img src='https://cdn.discordapp.com/emojis/919609217999065178.gif' class='inline'>"
+    ":D": "<img src='/resources/emoji/excited.png' class='inline' title=':D'>",
+    ":)": "<img src='/resources/emoji/happy.png' class='inline' title=':)'>",
+    "&gt;:(": "<img src='/resources/emoji/angry.png' class='inline' title'>:('>",
+    ":(": "<img src='/resources/emoji/sad.png' class='inline' title=':('>",
+    ";)": "<img src='/resources/emoji/wink.png' class='inline' title=';)'>",
+    ":P": "<img src='/resources/emoji/tongue.png' class='inline' title=':P'>",
+    ":O": "<img src='/resources/emoji/surprised.png' class='inline' title=':O'>",
+    ":sus:": "<span title=':sus:'>ඞ</span>",
+	":staff:": "<img width='20' src='/resources/badges/admin.png' class='inline' title=':staff:'>",
+    ":s": "<img src='/resources/emoji/confused.png' class='inline' title=':s'>",
+	":dgoosedefault:": "<img src='//cdn.discordapp.com/emojis/677329379378069541.gif?size=20' class='inline' title=':dgoosedefault:'>",
+	":hmmm:": "<img src='//cdn.discordapp.com/emojis/848524889266454528.png?size=20' class='inline' title=':hmmm:'>",
+	":kekw:": "<img src='//cdn.discordapp.com/emojis/722193068333203478.png?size=20' class='inline' title=':kekw:'>",
+	":hype:": "<img src='//cdn.discordapp.com/emojis/869303657563316255.png?size=20' class='inline' title=':hype:'>",
+	":bug:": "<img width='20' src='/resources/badges/bug.png' class='inline' title=':bug:'>",
+	":omg:": "<img src='https://cdn.discordapp.com/emojis/920790382105735279.gif' class='inline' title=':omg:'>",
+	":wave:": "<img src='https://cdn.discordapp.com/emojis/919609217999065178.gif' class='inline' title=':wave:'>"
 }
 window.unreadMessages = 0;
 socket.on('chat message', function(msg) {
