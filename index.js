@@ -240,6 +240,7 @@ io.on("connection", (socket) => {
 							case "/adminreload":
 							case "/adminrefresh":
 								if(isAdmin(socket)) {
+									io.emit("system response", {type: "adminmessage", data: "An administrator is refreshing your client, likely due to a client update. Hang tight...")
 									io.emit("system response", {type: "refresh", data: null})
 								} else {
 									socket.emit("system response", {type: "message", data: "You do not have permission to use this command, you sussy baka!"})
