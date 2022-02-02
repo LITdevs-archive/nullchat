@@ -88,10 +88,14 @@ app.use(passport.session());
 app.use("/resources", express.static('public/resources'))
 app.use(express.urlencoded({extended:true}));
 
+// REMOVE THIS BELOW TO USE THE SERVICE
+app.get("*", (req, res) => {	
+	res.redirect("https://web.libera.chat/?channel=#litdevs");
+});
+// REMOVE THIS ABOVE TO USE THE SERVICE
 
 app.get("/", (req, res) => {	
-	res.redirect("https://web.libera.chat/?channel=#litdevs"); // REMOVE THIS AND UNCOMMENT THE BELOW TO USE THE SERVICE
-	//res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
+	res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
 });
 
 app.get('/login', function(req, res) {
