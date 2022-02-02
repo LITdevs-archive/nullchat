@@ -90,7 +90,8 @@ app.use(express.urlencoded({extended:true}));
 
 
 app.get("/", (req, res) => {	
-	res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
+	res.redirect("https://web.libera.chat/?channel=#litdevs"); // REMOVE THIS AND UNCOMMENT THE BELOW TO USE THE SERVICE
+	//res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
 });
 
 app.get('/login', function(req, res) {
