@@ -90,7 +90,7 @@ app.use(express.urlencoded({extended:true}));
 
 // REMOVE THIS BELOW TO USE THE SERVICE
 app.get("*", (req, res) => {	
-	res.redirect("https://web.libera.chat/?channel=#litdevs");
+	res.redirect("https://kiwiirc.com/nextclient/irc.libera.chat/litdevs");
 });
 // REMOVE THIS ABOVE TO USE THE SERVICE
 
