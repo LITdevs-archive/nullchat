@@ -88,12 +88,6 @@ app.use(passport.session());
 app.use("/resources", express.static('public/resources'))
 app.use(express.urlencoded({extended:true}));
 
-// REMOVE THIS BELOW TO USE THE SERVICE
-app.get("*", (req, res) => {	
-	res.redirect("https://kiwiirc.com/nextclient/irc.libera.chat/litdevs");
-});
-// REMOVE THIS ABOVE TO USE THE SERVICE
-
 app.get("/", (req, res) => {	
 	res.render(`${__dirname}/public/index.ejs`, {user: req.user ? req.user : null});
 });
